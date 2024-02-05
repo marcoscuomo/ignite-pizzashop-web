@@ -24,7 +24,7 @@ import { Textarea } from './ui/textarea'
 
 const storeProfileSchema = z.object({
   name: z.string().min(1),
-  description: z.string(),
+  description: z.string().nullable(),
 })
 
 type StoreProfileSchema = z.infer<typeof storeProfileSchema>
@@ -51,24 +51,45 @@ export function StoreProfileDialog() {
     },
   })
 
+  function updateManagedRestaurantCache({
+    name,
+    description,
+  }: StoreProfileSchema) {
+    const cached = queryClient.getQueryData<GetManagedRestaurantResponse>([
+      'managed-restaurant',
+    ])
+
+    if (cached) {
+      queryClient.setQueryData<GetManagedRestaurantResponse>(
+        ['managed-restaurant'],
+        {
+          ...cached,
+          name,
+          description,
+        },
+      )
+    }
+
+    return { cached }
+  }
+
   const { mutateAsync: updateProfileFn } = useMutation({
     mutationFn: updateProfile,
-    onSuccess(_, { name, description }) {
-      const cached = queryClient.getQueryData<GetManagedRestaurantResponse>([
-        'managed-restaurant',
-      ])
-      // Utilizamos isso para alterar o nome do restaurante e descrção na tela quando forem atualiadas,
-      if (cached) {
-        queryClient.setQueryData<GetManagedRestaurantResponse>(
-          ['managed-restaurant'],
-          {
-            ...cached,
-            name,
-            description,
-          },
-        )
+    onMutate({ name, description }) {
+      // Mudamos o estado do valor antes do sucesso da api, preumindo q o retorno será sucesso.
+      const { cached } = updateManagedRestaurantCache({ name, description })
+
+      return { previousProfile: cached }
+    },
+    onError(_, __, context) {
+      if (context?.previousProfile) {
+        // Se a requisção com a api der erro voltamos ao estado antigo das informações
+        updateManagedRestaurantCache(context.previousProfile)
       }
     },
+    // onSuccess(_, { name, description }) {
+    // Utilizamos isso para alterar o nome do restaurante e descrção na tela quando forem atualiadas, no success do retorno d api
+    // },
   })
 
   async function handleUpdateProfile(data: StoreProfileSchema) {
