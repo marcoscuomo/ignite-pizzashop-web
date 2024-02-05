@@ -11,12 +11,14 @@ export interface PaginationProps {
   pageIndex: number
   totalCount: number
   perPage: number
+  onPageChange: (pageIndex: number) => Promise<void> | void
 }
 
 export function Pagination({
   pageIndex,
   totalCount,
   perPage,
+  onPageChange,
 }: PaginationProps) {
   const pages = Math.ceil(totalCount / perPage) || 1 // Caso retorne um número invalido da divisão o padrão será 1
 
@@ -31,25 +33,45 @@ export function Pagination({
           Página {pageIndex + 1} de {pages}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="h-8 w-8 p-0">
+          <Button
+            onClick={() => onPageChange(0)}
+            variant="outline"
+            className="h-8 w-8 p-0"
+            disabled={pageIndex === 0}
+          >
             <ChevronsLeft className="h-4 w-4" />
             <span className="sr-only">Primeira página</span>
             {/* Para um leitor de tela */}
           </Button>
 
-          <Button variant="outline" className="h-8 w-8 p-0">
+          <Button
+            onClick={() => onPageChange(pageIndex - 1)}
+            variant="outline"
+            className="h-8 w-8 p-0"
+            disabled={pageIndex === 0}
+          >
             <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Próxima página</span>
-            {/* Para um leitor de tela */}
-          </Button>
-
-          <Button variant="outline" className="h-8 w-8 p-0">
-            <ChevronRight className="h-4 w-4" />
             <span className="sr-only">Página anterior</span>
             {/* Para um leitor de tela */}
           </Button>
 
-          <Button variant="outline" className="h-8 w-8 p-0">
+          <Button
+            onClick={() => onPageChange(pageIndex + 1)}
+            variant="outline"
+            className="h-8 w-8 p-0"
+            disabled={pages <= pageIndex + 1}
+          >
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Próxima página</span>
+            {/* Para um leitor de tela */}
+          </Button>
+
+          <Button
+            onClick={() => onPageChange(pages - 1)}
+            variant="outline"
+            className="h-8 w-8 p-0"
+            disabled={pages <= pageIndex + 1}
+          >
             <ChevronsRight className="h-4 w-4" />
             <span className="sr-only">Ultima página</span>
             {/* Para um leitor de tela */}
